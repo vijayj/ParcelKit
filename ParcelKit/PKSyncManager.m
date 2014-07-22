@@ -284,6 +284,7 @@ NSString * const PKSyncManagerDatastoreIncomingChangesKey = @"changes";
     [managedObjects unionSet:[managedObjectContext updatedObjects]];
     
     NSUInteger index = 0;
+
     for (NSManagedObject *managedObject in [self syncableManagedObjectsFromManagedObjects:managedObjects]) {
         [self updateDatastoreWithManagedObject:managedObject];
         index++;
@@ -295,6 +296,51 @@ NSString * const PKSyncManagerDatastoreIncomingChangesKey = @"changes";
 
     [self syncDatastore];
 }
+
+- (void)managedObjectContextDidSave:(NSNotification *)notification {
+    if (![self isObserving]) return;
+    
+    NSSet *deletedObjects = notification.userInfo[NSDeletedObjectsKey];
+    for (NSManagedObject *managedObject in deletedObjects) {
+        if ([managedObject respondsToSelector:@selector(isRecordSyncable)]) {
+            id<ParcelKitSyncedObject> pkObj = (id<ParcelKitSyncedObject>)managedObject;
+            if (![pkObj isRecordSyncable]) {
+                continue;
+            }
+        }
+        
+        NSString *tableID = [self tableForEntityName:[[managedObject entity] name]];
+        if (!tableID) continue;
+        
+        DBTable *table = [self.datastore getTable:tableID];
+        DBError *error = nil;
+        DBRecord *record = [table getRecord:[managedObject primitiveValueForKey:self.syncAttributeName] error:&error];
+        if (record) {
+            [record deleteRecord];
+        } else if (error) {
+            NSLog(@"Error getting datastore record: %@", error);
+        }
+    };
+    
+    NSMutableSet *managedObjects = [[NSMutableSet alloc] init];
+    [managedObjects unionSet:notification.userInfo[NSInsertedObjectsKey]];
+    [managedObjects unionSet:notification.userInfo[NSDeletedObjectsKey]];
+    
+    NSUInteger index = 0;
+    
+    for (NSManagedObject *managedObject in [self syncableManagedObjectsFromManagedObjects:managedObjects]) {
+        [self updateDatastoreWithManagedObject:managedObject];
+        index++;
+        
+        if (index % self.syncBatchSize == 0) {
+            [self syncDatastore];
+        }
+    }
+    
+    [self syncDatastore];
+}
+
+
 
 - (void)updateDatastoreWithManagedObject:(NSManagedObject *)managedObject
 {
