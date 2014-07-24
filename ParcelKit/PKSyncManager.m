@@ -165,7 +165,7 @@ NSString * const PKSyncManagerDatastoreIncomingChangesKey = @"changes";
         });
     }];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextWillSave:) name:NSManagedObjectContextWillSaveNotification object:self.managedObjectContext];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextWillSave:) name:NSManagedObjectContextWillSaveNotification object:nil];
 }
 
 - (void)stopObserving
@@ -175,7 +175,7 @@ NSString * const PKSyncManagerDatastoreIncomingChangesKey = @"changes";
     self.persistentStoreCoordinator = nil;
     
     [self.datastore removeObserver:self];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSManagedObjectContextWillSaveNotification object:self.managedObjectContext];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSManagedObjectContextWillSaveNotification object:nil];
 }
 
 #pragma mark - Updating Core Data
@@ -266,7 +266,7 @@ NSString * const PKSyncManagerDatastoreIncomingChangesKey = @"changes";
     if (![self isObserving]) return;
     
     NSManagedObjectContext *managedObjectContext = notification.object;
-    if (self.managedObjectContext != managedObjectContext) return;
+    if (self.managedObjectContext.persistentStoreCoordinator != managedObjectContext.persistentStoreCoordinator) return;
     
     NSSet *deletedObjects = [managedObjectContext deletedObjects];
     for (NSManagedObject *managedObject in [self syncableManagedObjectsFromManagedObjects:deletedObjects]) {
