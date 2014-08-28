@@ -184,10 +184,4 @@ extern NSString * const PKSyncManagerDatastoreLastSyncDateKey;
  */
 - (BOOL)syncDatastore;
 
-
-/**
- Force a manual sync of the core data change to dropbox datastore from a managed object save notification
- */
-- (void)managedObjectContextDidSave:(NSNotification *)notification;
-
 @end
