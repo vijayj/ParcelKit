@@ -32,6 +32,7 @@ NSString * const PKSyncManagerDatastoreStatusDidChangeNotification = @"PKSyncMan
 NSString * const PKSyncManagerDatastoreStatusKey = @"status";
 NSString * const PKSyncManagerDatastoreIncomingChangesNotification = @"PKSyncManagerDatastoreIncomingChanges";
 NSString * const PKSyncManagerDatastoreIncomingChangesKey = @"changes";
+NSString * const PKSyncManagerDatastoreIncomingChangesErrorKey = @"error";
 NSString * const PKSyncManagerDatastoreLastSyncDateNotification = @"PKSyncManagerDatastoreLastSyncDateNotification";
 NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
 
@@ -181,8 +182,10 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
 }
 
 #pragma mark - Updating Core Data
-- (BOOL)updateCoreDataWithDatastoreChanges:(NSDictionary *)changes
+- (BOOL)updateCoreDataWithDatastoreChanges:(NSDictionary *)changes error:(NSError **)error
 {
+    NSAssert(*error == nil, @"Error must be nil");
+
     static NSString * const PKUpdateManagedObjectKey = @"object";
     static NSString * const PKUpdateRecordKey = @"record";
     
@@ -210,8 +213,8 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
             for (DBRecord *record in records) {
                 [fetchRequest setPredicate:[NSPredicate predicateWithFormat:@"%K == %@", strongSelf.syncAttributeName, record.recordId]];
                 
-                NSError *error = nil;
-                NSArray *managedObjects = [managedObjectContext executeFetchRequest:fetchRequest error:&error];
+                NSError *fetchRequestError = nil;
+                NSArray *managedObjects = [managedObjectContext executeFetchRequest:fetchRequest error:&fetchRequestError];
                 if (managedObjects)  {
                     NSManagedObject *managedObject = [managedObjects lastObject];
                     
@@ -228,24 +231,30 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
                         [updates addObject:@{PKUpdateManagedObjectKey: managedObject, PKUpdateRecordKey: record}];
                     }
                 } else {
-                    NSLog(@"Error executing fetch request: %@", error);
+                    NSLog(@"Error executing fetch request: %@", fetchRequestError);
                 }
             }
         }];
         
-        
-        for (NSDictionary *update in updates) {
-            NSManagedObject *managedObject = update[PKUpdateManagedObjectKey];
-            DBRecord *record = update[PKUpdateRecordKey];
-            [managedObject pk_setPropertiesWithRecord:record syncAttributeName:strongSelf.syncAttributeName];
+        @try {
+            for (NSDictionary *update in updates) {
+                NSManagedObject *managedObject = update[PKUpdateManagedObjectKey];
+                DBRecord *record = update[PKUpdateRecordKey];
+                [managedObject pk_setPropertiesWithRecord:record syncAttributeName:strongSelf.syncAttributeName];
+            }
         }
-        
+        @catch (NSException *exception) {
+            NSMutableDictionary *errorUserInfo = [@{@"exceptionName" : exception.name, @"exceptionReason" : exception.reason} mutableCopy];
+            if (exception.userInfo != nil) {
+                errorUserInfo[@"exceptionUserInfo"] = exception.userInfo;
+            }
+            *error = [NSError errorWithDomain:@"ParcelKit" code:1 userInfo:errorUserInfo];
+            return;
+        }
+
         if ([managedObjectContext hasChanges]) {
             [[NSNotificationCenter defaultCenter] addObserver:strongSelf selector:@selector(syncManagedObjectContextDidSave:) name:NSManagedObjectContextDidSaveNotification object:managedObjectContext];
-            NSError *error = nil;
-            if (![managedObjectContext save:&error]) {
-                NSLog(@"Error saving managed object context: %@", error);
-            }
+            [managedObjectContext save:error];
             [[NSNotificationCenter defaultCenter] removeObserver:strongSelf name:NSManagedObjectContextDidSaveNotification object:managedObjectContext];
         }
     }];
@@ -318,8 +327,13 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
     DBError *error = nil;
     NSDictionary *changes = [self.datastore sync:&error];
     if (changes) {
-        if ([self updateCoreDataWithDatastoreChanges:changes]) {
-            [[NSNotificationCenter defaultCenter] postNotificationName:PKSyncManagerDatastoreIncomingChangesNotification object:self userInfo:@{PKSyncManagerDatastoreIncomingChangesKey: changes}];
+        NSError *updateError = nil;
+        NSMutableDictionary *userInfo = [@{PKSyncManagerDatastoreIncomingChangesKey : changes} mutableCopy];
+        if ([self updateCoreDataWithDatastoreChanges:changes error:&updateError]) {
+            if (updateError != nil) {
+                userInfo[PKSyncManagerDatastoreIncomingChangesErrorKey] = updateError;
+            }
+            [[NSNotificationCenter defaultCenter] postNotificationName:PKSyncManagerDatastoreIncomingChangesNotification object:self userInfo:userInfo];
         }
         [[NSNotificationCenter defaultCenter] postNotificationName:PKSyncManagerDatastoreLastSyncDateNotification object:self userInfo:@{PKSyncManagerDatastoreLastSyncDateKey: [NSDate date]}];
         

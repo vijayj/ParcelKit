@@ -34,13 +34,15 @@
 #import "Author.h"
 
 @interface PKSyncManager (ParcelKitTests)
-- (void)updateCoreDataWithDatastoreChanges:(NSDictionary *)changes;
+
+- (BOOL)updateCoreDataWithDatastoreChanges:(NSDictionary *)changes error:(NSError **)error;
 @end
 
 @interface PKSyncManagerTests : XCTestCase
 @property (strong, nonatomic) NSManagedObjectContext *managedObjectContext;
 @property (strong, nonatomic) id datastore;
 @property (strong, nonatomic) PKSyncManager *syncManager;
+@property (strong, nonatomic) NSError *datastoreChangeError;
 @end
 
 @implementation PKSyncManagerTests
@@ -250,6 +252,27 @@
     NSManagedObject *object = objects[0];
     XCTAssertEqualObjects(@"1", [object valueForKey:self.syncManager.syncAttributeName], @"");
     XCTAssertEqualObjects(@"To Kill a Mockingbird", [object valueForKey:@"title"], @"");
+}
+
+- (void)testIncomingDatastoreChangeShouldReturnErrorWithInvalidObject
+{
+    self.datastoreChangeError = nil;
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(datastoreDidChange:) name:PKSyncManagerDatastoreIncomingChangesNotification object:nil];
+
+    [self.syncManager startObserving];
+
+    PKRecordMock *book = [PKRecordMock record:@"1" withFields:@{}];
+    [self.datastore updateStatus:[PKDatastoreStatusMock datastoreStatusWithIncoming:YES] withChanges:@{@"books": @[book]}];
+
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Book"];
+    NSArray *objects = [self.managedObjectContext executeFetchRequest:fetchRequest error:nil];
+    XCTAssertEqual(0, (int)[objects count], @"");
+
+    XCTAssertNotNil(self.datastoreChangeError, @"");
+}
+
+- (void)datastoreDidChange:(NSNotification *)notification {
+    self.datastoreChangeError = notification.userInfo[PKSyncManagerDatastoreIncomingChangesErrorKey];
 }
 
 - (void)testIncomingDatastoreChangeShouldUpdateCoreDataWithMultipleObjects
