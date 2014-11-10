@@ -193,6 +193,7 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
     
     NSManagedObjectContext *managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
     [managedObjectContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
+    [managedObjectContext setMergePolicy:NSMergeByPropertyObjectTrumpMergePolicy];
     [managedObjectContext setUndoManager:nil];
 
     __weak typeof(self) weakSelf = self;
