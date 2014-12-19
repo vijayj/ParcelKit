@@ -222,10 +222,10 @@
     [self.datastore verify];
 }
 
-- (void)testStartObservingShouldObserveAllChangesToMoc
+- (void)testStartObservingShouldObserveManagedObjectContext
 {
     id mockNotificationCenter = [OCMockObject niceMockForClass:[NSNotificationCenter class]];
-    [[mockNotificationCenter expect] addObserver:self.syncManager selector:[OCMArg anySelector] name:NSManagedObjectContextWillSaveNotification object:nil];
+    [[mockNotificationCenter expect] addObserver:self.syncManager selector:[OCMArg anySelector] name:NSManagedObjectContextWillSaveNotification object:self.syncManager.managedObjectContext];
     
     id mockNotificationCenterClass = [OCMockObject mockForClass:[NSNotificationCenter class]];
     [[[mockNotificationCenterClass expect] andReturn:mockNotificationCenter] defaultCenter];

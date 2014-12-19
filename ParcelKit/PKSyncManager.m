@@ -168,7 +168,7 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
         });
     }];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextWillSave:) name:NSManagedObjectContextWillSaveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(managedObjectContextWillSave:) name:NSManagedObjectContextWillSaveNotification object:self.managedObjectContext];
 }
 
 - (void)stopObserving
@@ -178,7 +178,7 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
     self.persistentStoreCoordinator = nil;
     
     [self.datastore removeObserver:self];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSManagedObjectContextWillSaveNotification object:nil];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:NSManagedObjectContextWillSaveNotification object:self.managedObjectContext];
 }
 
 #pragma mark - Updating Core Data
@@ -278,7 +278,7 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
     if (![self isObserving]) return;
     
     NSManagedObjectContext *managedObjectContext = notification.object;
-    if (self.managedObjectContext.persistentStoreCoordinator != managedObjectContext.persistentStoreCoordinator) return;
+    if (self.managedObjectContext != managedObjectContext) return;
     
     NSSet *deletedObjects = [managedObjectContext deletedObjects];
     for (NSManagedObject *managedObject in [self syncableManagedObjectsFromManagedObjects:deletedObjects]) {
