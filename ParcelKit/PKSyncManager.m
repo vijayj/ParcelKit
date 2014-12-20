@@ -28,6 +28,7 @@
 #import "DBRecord+ParcelKit.h"
 
 NSString * const PKDefaultSyncAttributeName = @"syncID";
+NSString * const PKSyncManagerManagedObjectContextIdentifier = @"PKSyncManagerPrivateManagedObjectContext";
 NSString * const PKSyncManagerDatastoreStatusDidChangeNotification = @"PKSyncManagerDatastoreStatusDidChange";
 NSString * const PKSyncManagerDatastoreStatusKey = @"status";
 NSString * const PKSyncManagerDatastoreIncomingChangesNotification = @"PKSyncManagerDatastoreIncomingChanges";
@@ -195,6 +196,7 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
     [managedObjectContext setPersistentStoreCoordinator:self.persistentStoreCoordinator];
     [managedObjectContext setMergePolicy:NSMergeByPropertyObjectTrumpMergePolicy];
     [managedObjectContext setUndoManager:nil];
+    managedObjectContext.userInfo[PKSyncManagerManagedObjectContextIdentifier] = [NSObject new];
 
     __weak typeof(self) weakSelf = self;
     [managedObjectContext performBlockAndWait:^{
@@ -275,10 +277,15 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
 #pragma mark - Updating Datastore
 - (void)managedObjectContextWillSave:(NSNotification *)notification
 {
-    if (![self isObserving]) return;
-    
     NSManagedObjectContext *managedObjectContext = notification.object;
     if (self.managedObjectContext != managedObjectContext) return;
+    
+    [self updateDatastoreWithManagedObjectContextChanges:managedObjectContext];
+}
+
+- (void)updateDatastoreWithManagedObjectContextChanges:(NSManagedObjectContext *)managedObjectContext
+{
+    if (![self isObserving]) return;
     
     NSSet *deletedObjects = [managedObjectContext deletedObjects];
     for (NSManagedObject *managedObject in [self syncableManagedObjectsFromManagedObjects:deletedObjects]) {
