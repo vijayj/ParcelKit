@@ -59,8 +59,6 @@
 		ABE87A4517935C0400E2A1DA /* PKSyncManager.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = ABE87A241793556400E2A1DA /* PKSyncManager.h */; };
 		ABE87A4617935C0400E2A1DA /* NSManagedObject+ParcelKit.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = ABE87A261793556400E2A1DA /* NSManagedObject+ParcelKit.h */; };
 		ABE87A4917935C0400E2A1DA /* DBRecord+ParcelKit.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = ABE87A281793556400E2A1DA /* DBRecord+ParcelKit.h */; };
-		B11804D319AEF3E90006CE52 /* _Book.m in Sources */ = {isa = PBXBuildFile; fileRef = B11804D019AEF3E90006CE52 /* _Book.m */; };
-		B11804D419AEF3E90006CE52 /* Book.m in Sources */ = {isa = PBXBuildFile; fileRef = B11804D219AEF3E90006CE52 /* Book.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -150,10 +148,6 @@
 		ABE87A291793556400E2A1DA /* DBRecord+ParcelKit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "DBRecord+ParcelKit.m"; sourceTree = "<group>"; };
 		ABE87A361793558A00E2A1DA /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
 		ABE87A3A179355F400E2A1DA /* Dropbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Dropbox.framework; sourceTree = "<group>"; };
-		B11804CF19AEF3E90006CE52 /* _Book.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = _Book.h; sourceTree = "<group>"; };
-		B11804D019AEF3E90006CE52 /* _Book.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = _Book.m; sourceTree = "<group>"; };
-		B11804D119AEF3E90006CE52 /* Book.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Book.h; sourceTree = "<group>"; };
-		B11804D219AEF3E90006CE52 /* Book.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Book.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -202,10 +196,6 @@
 		AB3F8D3717935E2D000F8FA0 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				B11804CF19AEF3E90006CE52 /* _Book.h */,
-				B11804D019AEF3E90006CE52 /* _Book.m */,
-				B11804D119AEF3E90006CE52 /* Book.h */,
-				B11804D219AEF3E90006CE52 /* Book.m */,
 				52F5FB14191430470060F8EA /* _Author.h */,
 				52F5FB15191430470060F8EA /* _Author.m */,
 				52F5FB16191430470060F8EA /* Author.h */,
@@ -458,9 +448,7 @@
 				ABC7D102179360AF00AAA1CA /* DBRecord+ParcelKit.m in Sources */,
 				ABC7D0FF179360A700AAA1CA /* NSManagedObject+ParcelKit.m in Sources */,
 				AB3F8D4517935E6C000F8FA0 /* PKSyncManagerTests.m in Sources */,
-				B11804D419AEF3E90006CE52 /* Book.m in Sources */,
 				AB6EF67F17943D6400D0BAB0 /* NSManagedObjectContext+ParcelKitTests.m in Sources */,
-				B11804D319AEF3E90006CE52 /* _Book.m in Sources */,
 				AB6EF6791794363500D0BAB0 /* Tests.xcdatamodeld in Sources */,
 				ABD7EA161953229D0041A51C /* PKDatastoreStatusMock.m in Sources */,
 				AB6EF68B179488EC00D0BAB0 /* PKRecordMock.m in Sources */,

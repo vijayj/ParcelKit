@@ -34,7 +34,6 @@
 #import "PKRecordMock.h"
 #import "PKListMock.h"
 #import "Author.h"
-#import "Book.h"
 
 @interface NSManagedObjectParcelKitTests : XCTestCase
 @property (strong, nonatomic) NSManagedObjectContext *managedObjectContext;
@@ -97,25 +96,6 @@
     PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{}];
     XCTAssertThrowsSpecificNamed([self.book pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName], NSException, PKInvalidAttributeValueException, @"");
 }
-
-- (void)testSetPropertiesWithRecordShouldRespectSyncedPropertiesIfImplemented
-{
-    Book *book = (Book *) self.book;
-    book.hasCustomSyncableProperties = YES;
-    NSDecimalNumber *price = [[NSDecimalNumber alloc] initWithString:@"12.11"];
-    book.price = price;
-    book.publisher = self.publisher;
-    book.title = @"mocking jay";
-
-    PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{@"title": @"To Kill a Mockingbird Part 2: Birdy's Revenge"}];
-    [self.book pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName];
-    
-    XCTAssertEqualObjects(@"To Kill a Mockingbird Part 2: Birdy's Revenge", [self.book valueForKey:@"title"], @"");
-    XCTAssertEqualObjects(self.publisher, [self.book valueForKey:@"publisher"], @"");
-    XCTAssertEqualObjects(price, [self.book valueForKey:@"price"], @"");
-}
-
-
 
 - (void)testSetPropertiesWithRecordShouldSetStringAttributeType
 {
