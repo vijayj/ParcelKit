@@ -54,7 +54,7 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
     return [uuid stringByReplacingOccurrencesOfString:@"-" withString:@""];
 }
 
-- (id)init
+- (instancetype)init
 {
     self = [super init];
     if (self) {
@@ -65,7 +65,7 @@ NSString * const PKSyncManagerDatastoreLastSyncDateKey = @"lastSyncDate";
     return self;
 }
 
-- (id)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext datastore:(DBDatastore *)datastore
+- (instancetype)initWithManagedObjectContext:(NSManagedObjectContext *)managedObjectContext datastore:(DBDatastore *)datastore
 {
     self = [self init];
     if (self) {
