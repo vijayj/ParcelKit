@@ -97,6 +97,21 @@
     XCTAssertThrowsSpecificNamed([self.book pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName], NSException, PKInvalidAttributeValueException, @"");
 }
 
+- (void)testSetPropertiesWithRecordShouldSetNilValueIfAttributeIsOptional
+{
+    PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{}];
+    [self.book setValue:@123 forKey:@"price"];
+    [self.book pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName];
+    XCTAssertNil([self.book valueForKey:@"price"]);
+}
+
+- (void)testSetPropertiesWithRecordShouldNotSetNilValueIfAttributeIsRequired
+{
+    PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{}];
+    [self.book pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName];
+    XCTAssertEqualObjects([self.book valueForKey:@"title"], @"To Kill a Mockingbird");
+}
+
 - (void)testSetPropertiesWithRecordShouldSetStringAttributeType
 {
     PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{@"title": @"To Kill a Mockingbird Part 2: Birdy's Revenge"}];

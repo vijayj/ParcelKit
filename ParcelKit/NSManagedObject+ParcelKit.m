@@ -113,7 +113,9 @@ static NSString * const PKInvalidAttributeValueExceptionFormat = @"“%@.%@” e
                  [NSException raise:PKInvalidAttributeValueException format:@"“%@.%@” expected to not be null", entityName, propertyName];
             }
             
-            [strongSelf setValue:value forKey:propertyName];
+            if (value || [propertyDescription isOptional]) {
+                [strongSelf setValue:value forKey:propertyName];
+            }
         } else if ([propertyDescription isKindOfClass:[NSRelationshipDescription class]]) {
             NSRelationshipDescription *relationshipDescription = (NSRelationshipDescription *)propertyDescription;
             NSRelationshipDescription *inverse = [relationshipDescription inverseRelationship];
