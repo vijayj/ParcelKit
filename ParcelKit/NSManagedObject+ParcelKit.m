@@ -35,12 +35,19 @@ static NSString * const PKInvalidAttributeValueExceptionFormat = @"“%@.%@” e
 {
     NSString *entityName = [[self entity] name];
     
-    __weak typeof(self) weakSelf = self;
     NSDictionary *propertiesByName = [[self entity] propertiesByName];
+    NSArray *syncedPropertyNames = nil;
+    if ([self respondsToSelector:@selector(syncedPropertiesDictionary:)]) {
+        syncedPropertyNames = [[self performSelector:@selector(syncedPropertiesDictionary:) withObject:propertiesByName] allKeys];
+    } else {
+        syncedPropertyNames = [propertiesByName allKeys];
+    }
+    
+    __weak typeof(self) weakSelf = self;
     [propertiesByName enumerateKeysAndObjectsUsingBlock:^(NSString *propertyName, NSPropertyDescription *propertyDescription, BOOL *stop) {
         typeof(self) strongSelf = weakSelf; if (!strongSelf) return;
         
-        if ([propertyName isEqualToString:syncAttributeName] || [propertyDescription isTransient]) return;
+        if ([propertyName isEqualToString:syncAttributeName] || ![syncedPropertyNames containsObject:propertyName] || [propertyDescription isTransient]) return;
         
         if ([propertyDescription isKindOfClass:[NSAttributeDescription class]]) {
             NSAttributeType attributeType = [(NSAttributeDescription *)propertyDescription attributeType];
@@ -102,11 +109,11 @@ static NSString * const PKInvalidAttributeValueExceptionFormat = @"“%@.%@” e
                         [NSException raise:PKInvalidAttributeValueException format:PKInvalidAttributeValueExceptionFormat, entityName, propertyName, value, [NSData class], [value class]];
                     }
                 }
-            } else if (![propertyDescription isOptional] && ![strongSelf valueForKey:propertyName]) {
-                 [NSException raise:PKInvalidAttributeValueException format:@"“%@.%@” expected to not be null", entityName, propertyName];
             }
             
-            [strongSelf setValue:value forKey:propertyName];
+            if (value || [propertyDescription isOptional]) {
+                [strongSelf setValue:value forKey:propertyName];
+            }
         } else if ([propertyDescription isKindOfClass:[NSRelationshipDescription class]]) {
             NSRelationshipDescription *relationshipDescription = (NSRelationshipDescription *)propertyDescription;
             NSRelationshipDescription *inverse = [relationshipDescription inverseRelationship];

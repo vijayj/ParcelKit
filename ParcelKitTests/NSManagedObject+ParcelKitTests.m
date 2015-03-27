@@ -54,7 +54,7 @@
     [self.book setValue:@"1" forKey:PKDefaultSyncAttributeName];
     [self.book setValue:@"To Kill a Mockingbird" forKey:@"title"];
     
-    self.author = [Author insertInManagedObjectContext:self.managedObjectContext];
+    self.author = [NSEntityDescription insertNewObjectForEntityForName:@"Author" inManagedObjectContext:self.managedObjectContext];
     [self.author setValue:@"1" forKey:PKDefaultSyncAttributeName];
     [self.author setValue:@"Harper Lee" forKey:@"name"];
     
@@ -89,12 +89,19 @@
     XCTAssertNoThrow([self.book pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName], @"");
 }
 
-- (void)testSetPropertiesWithRecordShouldRaiseExceptionIfRequiredAttributeHasNoValue
+- (void)testSetPropertiesWithRecordShouldSetNilValueIfAttributeIsOptional
 {
-    [self.book setValue:nil forKey:@"title"];
-
     PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{}];
-    XCTAssertThrowsSpecificNamed([self.book pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName], NSException, PKInvalidAttributeValueException, @"");
+    [self.book setValue:@123 forKey:@"price"];
+    [self.book pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName];
+    XCTAssertNil([self.book valueForKey:@"price"]);
+}
+
+- (void)testSetPropertiesWithRecordShouldNotSetNilValueIfAttributeIsRequired
+{
+    PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{}];
+    [self.book pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName];
+    XCTAssertEqualObjects([self.book valueForKey:@"title"], @"To Kill a Mockingbird");
 }
 
 - (void)testSetPropertiesWithRecordShouldSetStringAttributeType
@@ -438,7 +445,7 @@
 
 - (void)testSetPropertiesWithRecordShouldNotRemoveUnsyncableObjectsInToManyRelationship
 {
-    Author *authorToBeRemoved = [Author insertInManagedObjectContext:self.managedObjectContext];
+    Author *authorToBeRemoved = [NSEntityDescription insertNewObjectForEntityForName:@"Author" inManagedObjectContext:self.managedObjectContext];
     [authorToBeRemoved setValue:@"2" forKey:PKDefaultSyncAttributeName];
     authorToBeRemoved.isRecordSyncable = NO;
     
@@ -554,7 +561,23 @@
     PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{@"title": @"To Kill a Mockingbird Part 2: Birdy's Revenge"}];
     [self.author pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName];
     XCTAssert(self.author.hasSyncCallbackBeenCalled, @"");
-    
+}
+
+- (void)testSetPropertiesWithRecordShouldSetPropertiesFromSyncedPropertiesDictionary
+{
+    PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{@"favoriteFood": @"sushi"}];
+    [self.author pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName];
+    XCTAssertEqualObjects(@"sushi", [self.author valueForKey:@"favoriteFood"], @"");
+}
+
+- (void)testSetPropertiesWithRecordShouldIgnorePropertiesNotInSyncedPropertiesDictionary
+{
+    NSNumber *royalties = @(100000);
+    [self.author setValue:royalties forKey:@"royalties"];
+
+    PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{@"royalties": @(100)}];
+    [self.author pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName];
+    XCTAssertEqualObjects(royalties, [self.author valueForKey:@"royalties"], @"");
 }
 
 @end

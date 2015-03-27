@@ -1,19 +1,16 @@
 #import "Author.h"
 
-
-@interface Author ()
-
-// Private interface goes here.
-
-@end
-
-
 @implementation Author
+@dynamic syncID;
+@dynamic name;
+@dynamic royalties;
+@dynamic favoriteFood;
+@dynamic books;
 
 @synthesize hasSyncCallbackBeenCalled;
 @synthesize isRecordSyncable;
 
-- (id)initWithEntity:(NSEntityDescription *)entity insertIntoManagedObjectContext:(NSManagedObjectContext *)context {
+- (instancetype)initWithEntity:(NSEntityDescription *)entity insertIntoManagedObjectContext:(NSManagedObjectContext *)context {
     if (self = [super initWithEntity:entity insertIntoManagedObjectContext:context]) {
         self.isRecordSyncable = YES;
     }
@@ -24,9 +21,10 @@
     self.hasSyncCallbackBeenCalled = YES;
 }
 
-- (NSDictionary*)syncedPropertiesDictionary:(NSDictionary*)propertiesByName {
-    NSMutableDictionary* values = [[self dictionaryWithValuesForKeys:[propertiesByName allKeys]] mutableCopy];
-    [values setObject:@"cheese" forKey:@"favourite_food"];
+- (NSDictionary *)syncedPropertiesDictionary:(NSDictionary *)propertiesByName {
+    NSMutableDictionary *values = [[self dictionaryWithValuesForKeys:[propertiesByName allKeys]] mutableCopy];
+    [values removeObjectForKey:@"royalties"];
+    [values setObject:@"cheese" forKey:@"favoriteFood"];
     return values;
 }
 

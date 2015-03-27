@@ -34,13 +34,15 @@
 #import "Author.h"
 
 @interface PKSyncManager (ParcelKitTests)
-- (void)updateCoreDataWithDatastoreChanges:(NSDictionary *)changes;
+
+- (BOOL)updateCoreDataWithDatastoreChanges:(NSDictionary *)changes error:(NSError **)error;
 @end
 
 @interface PKSyncManagerTests : XCTestCase
 @property (strong, nonatomic) NSManagedObjectContext *managedObjectContext;
 @property (strong, nonatomic) id datastore;
 @property (strong, nonatomic) PKSyncManager *syncManager;
+@property (strong, nonatomic) NSError *datastoreChangeError;
 @end
 
 @implementation PKSyncManagerTests
@@ -252,6 +254,27 @@
     XCTAssertEqualObjects(@"To Kill a Mockingbird", [object valueForKey:@"title"], @"");
 }
 
+- (void)testIncomingDatastoreChangeShouldReturnErrorWithInvalidObject
+{
+    self.datastoreChangeError = nil;
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(datastoreDidChange:) name:PKSyncManagerDatastoreIncomingChangesNotification object:nil];
+
+    [self.syncManager startObserving];
+
+    PKRecordMock *book = [PKRecordMock record:@"1" withFields:@{}];
+    [self.datastore updateStatus:[PKDatastoreStatusMock datastoreStatusWithIncoming:YES] withChanges:@{@"books": @[book]}];
+
+    NSFetchRequest *fetchRequest = [NSFetchRequest fetchRequestWithEntityName:@"Book"];
+    NSArray *objects = [self.managedObjectContext executeFetchRequest:fetchRequest error:nil];
+    XCTAssertEqual(0, (int)[objects count], @"");
+
+    XCTAssertNotNil(self.datastoreChangeError, @"");
+}
+
+- (void)datastoreDidChange:(NSNotification *)notification {
+    self.datastoreChangeError = notification.userInfo[PKSyncManagerDatastoreIncomingChangesErrorKey];
+}
+
 - (void)testIncomingDatastoreChangeShouldUpdateCoreDataWithMultipleObjects
 {
     [self.syncManager startObserving];
@@ -428,7 +451,7 @@
 {
     [self.syncManager startObserving];
     
-    Author *object = [Author insertInManagedObjectContext:self.managedObjectContext];
+    Author *object = [NSEntityDescription insertNewObjectForEntityForName:@"Author" inManagedObjectContext:self.managedObjectContext];
     [object setValue:@"1" forKey:self.syncManager.syncAttributeName];
     [object setValue:@"Harper Lee" forKey:@"name"];
     object.isRecordSyncable = NO;
@@ -464,7 +487,7 @@
 {
     [self.syncManager startObserving];
     
-    Author *object = [Author insertInManagedObjectContext:self.managedObjectContext];
+    Author *object = [NSEntityDescription insertNewObjectForEntityForName:@"Author" inManagedObjectContext:self.managedObjectContext];
     [object setValue:@"1" forKey:self.syncManager.syncAttributeName];
     [object setValue:@"Harper Lee" forKey:@"name"];
     XCTAssertTrue([self.managedObjectContext save:nil], @"");
