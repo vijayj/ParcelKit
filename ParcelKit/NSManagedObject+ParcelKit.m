@@ -109,8 +109,6 @@ static NSString * const PKInvalidAttributeValueExceptionFormat = @"“%@.%@” e
                         [NSException raise:PKInvalidAttributeValueException format:PKInvalidAttributeValueExceptionFormat, entityName, propertyName, value, [NSData class], [value class]];
                     }
                 }
-            } else if (![propertyDescription isOptional] && ![strongSelf valueForKey:propertyName]) {
-                 [NSException raise:PKInvalidAttributeValueException format:@"“%@.%@” expected to not be null", entityName, propertyName];
             }
             
             if (value || [propertyDescription isOptional]) {

@@ -89,14 +89,6 @@
     XCTAssertNoThrow([self.book pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName], @"");
 }
 
-- (void)testSetPropertiesWithRecordShouldRaiseExceptionIfRequiredAttributeHasNoValue
-{
-    [self.book setValue:nil forKey:@"title"];
-
-    PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{}];
-    XCTAssertThrowsSpecificNamed([self.book pk_setPropertiesWithRecord:record syncAttributeName:PKDefaultSyncAttributeName], NSException, PKInvalidAttributeValueException, @"");
-}
-
 - (void)testSetPropertiesWithRecordShouldSetNilValueIfAttributeIsOptional
 {
     PKRecordMock *record = [PKRecordMock record:@"1" withFields:@{}];
